@@ -2,6 +2,15 @@ use std::error::Error;
 use std::fmt;
 use std::mem;
 
+#[cfg(feature = "strict_yaml")]
+mod yaml {
+    pub use strict_yaml_rust::strict_yaml as yaml;
+    pub use strict_yaml_rust::StrictYaml as Yaml;
+    pub use strict_yaml_rust::StrictYamlLoader as YamlLoader;
+    pub use strict_yaml_rust::*;
+}
+
+#[cfg(feature = "yaml")]
 use yaml_rust as yaml;
 
 use crate::format;
@@ -16,7 +25,13 @@ pub fn parse(
     let mut docs = yaml::YamlLoader::load_from_str(text)?;
     let root = match docs.len() {
         0 => yaml::Yaml::Hash(yaml::yaml::Hash::new()),
-        1 => mem::replace(&mut docs[0], yaml::Yaml::Null),
+        1 => mem::replace(
+            &mut docs[0],
+            #[cfg(feature = "strict_yaml")]
+            yaml::Yaml::String(String::new()),
+            #[cfg(feature = "yaml")]
+            yaml::Yaml::Null,
+        ),
         n => {
             return Err(Box::new(MultipleDocumentsError(n)));
         }
@@ -32,6 +47,7 @@ fn from_yaml_value(
 ) -> Result<Value, Box<dyn Error + Send + Sync>> {
     match *value {
         yaml::Yaml::String(ref value) => Ok(Value::new(uri, ValueKind::String(value.clone()))),
+        #[cfg(feature = "yaml")]
         yaml::Yaml::Real(ref value) => {
             // TODO: Figure out in what cases this can panic?
             value
@@ -42,13 +58,16 @@ fn from_yaml_value(
                 .map(ValueKind::Float)
                 .map(|f| Value::new(uri, f))
         }
+        #[cfg(feature = "yaml")]
         yaml::Yaml::Integer(value) => Ok(Value::new(uri, ValueKind::I64(value))),
+        #[cfg(feature = "yaml")]
         yaml::Yaml::Boolean(value) => Ok(Value::new(uri, ValueKind::Boolean(value))),
         yaml::Yaml::Hash(ref table) => {
             let mut m = Map::new();
             for (key, value) in table {
                 match key {
                     yaml::Yaml::String(k) => m.insert(k.to_owned(), from_yaml_value(uri, value)?),
+                    #[cfg(feature = "yaml")]
                     yaml::Yaml::Integer(k) => m.insert(k.to_string(), from_yaml_value(uri, value)?),
                     _ => unreachable!(),
                 };

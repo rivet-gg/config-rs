@@ -52,3 +52,6 @@ pub use crate::builder::AsyncConfigBuilder;
 // Re-export
 #[cfg(feature = "convert-case")]
 pub use convert_case::Case;
+
+#[cfg(all(feature = "yaml", feature = "strict_yaml"))]
+compile_error!("yaml and strict_yaml cannot be enabled simultaneously");

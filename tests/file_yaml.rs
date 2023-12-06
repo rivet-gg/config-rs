@@ -1,4 +1,4 @@
-#![cfg(feature = "yaml")]
+#![cfg(any(feature = "yaml", feature = "strict_yaml"))]
 
 use serde_derive::Deserialize;
 

@@ -1,4 +1,4 @@
-#![cfg(feature = "yaml")]
+#![cfg(any(feature = "yaml", feature = "strict_yaml"))]
 
 use config::{Config, File, FileFormat};
 

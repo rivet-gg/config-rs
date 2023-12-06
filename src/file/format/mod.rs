@@ -15,7 +15,7 @@ mod toml;
 #[cfg(feature = "json")]
 mod json;
 
-#[cfg(feature = "yaml")]
+#[cfg(any(feature = "yaml", feature = "strict_yaml"))]
 mod yaml;
 
 #[cfg(feature = "ini")]
@@ -40,8 +40,8 @@ pub enum FileFormat {
     #[cfg(feature = "json")]
     Json,
 
-    /// YAML (parsed with yaml_rust)
-    #[cfg(feature = "yaml")]
+    /// YAML (parsed with yaml_rust or strict_yaml_rust)
+    #[cfg(any(feature = "yaml", feature = "strict_yaml"))]
     Yaml,
 
     /// INI (parsed with rust_ini)
@@ -69,7 +69,7 @@ lazy_static! {
         #[cfg(feature = "json")]
         formats.insert(FileFormat::Json, vec!["json"]);
 
-        #[cfg(feature = "yaml")]
+        #[cfg(any(feature = "yaml", feature = "strict_yaml"))]
         formats.insert(FileFormat::Yaml, vec!["yaml", "yml"]);
 
         #[cfg(feature = "ini")]
@@ -105,7 +105,7 @@ impl FileFormat {
             #[cfg(feature = "json")]
             FileFormat::Json => json::parse(uri, text),
 
-            #[cfg(feature = "yaml")]
+            #[cfg(any(feature = "yaml", feature = "strict_yaml"))]
             FileFormat::Yaml => yaml::parse(uri, text),
 
             #[cfg(feature = "ini")]
@@ -121,6 +121,7 @@ impl FileFormat {
                 not(feature = "toml"),
                 not(feature = "json"),
                 not(feature = "yaml"),
+                not(feature = "strict_yaml"),
                 not(feature = "ini"),
                 not(feature = "ron"),
                 not(feature = "json5"),
